@@ -9,7 +9,8 @@ classdef PlugData_thimple < PlugData_core
     properties
         labels
     end
-    properties(Access=private)
+    properties(SetAccess=private,GetAccess=public)
+        labelsID=struct()
     end
 
     methods
@@ -45,51 +46,23 @@ classdef PlugData_thimple < PlugData_core
             obj.labels=flags;
             flagVal=unique(flags);
             for i=1:length(flagVal)
-                indice=find(flags==flagVal(i));
+                indice=flags==flagVal(i);
                 flags(indice)=i;
+                obj.labelsID.(flagVal(i))=i;
             end
             obj.origin(:,3)=flags;
         end
-
-        function epoching(obj,center,leftSec,rightSec)
-            % input:
-            %   center : flag(int) 
-            %   leftSec : int
-            %   rightSec : int
-            for modal=["eeg","imp","acc","ofst"]
-                leftSample=leftSec*obj.fs.(modal);
-                rightSample=rightSec*obj.fs.(modal);
-                obj.(modal).epoched=struct();
-                obj.(modal).epoched.time=[-leftSample/obj.fs.(modal) : 1/obj.fs.(modal) : rightSample/obj.fs.(modal)];%1*x配列
-                obj.(modal).epoched.raw=struct();
-                channels=string(fields(obj.(modal).raw));
-                for channel=channels.'
-                    obj.(modal).epoched.raw.(channel)=[];
-                    if modal=="eeg"
-                        obj.(modal).epoched.filterd.(channel)=[];
-                    end
-                end
-                masterDin=obj.(modal).dins;
-                for index =1:size(masterDin,2)
-                    din=masterDin(1,index);
-                    if din==center
-                        zeroIndex=masterDin(2,index);
-                        leftIndex=zeroIndex-leftSample;
-                        rightIndex=zeroIndex+rightSample;
-                        for channel=channels.'
-                            obj.(modal).epoched.raw.(channel)=[obj.(modal).epoched.raw.(channel),obj.(modal).raw.(channel)(leftIndex:rightIndex)];%多次元配列trial数*x
-                            if modal=="eeg"
-                                obj.(modal).epoched.filterd.(channel)=[obj.(modal).epoched.filterd.(channel),obj.(modal).filterd.(channel)(leftIndex:rightIndex)];
-                            end
-                        end
-
-                        obj.(modal).epoched.flag=obj.(modal).flag(leftIndex:rightIndex);%1*x配列
-                        obj.(modal).epoched.dins=intersect(find(masterDin(2,:)>leftIndex),find(masterDin(2,:)<rightIndex));
-                    end
-                end
+        function [id2label,label2id]=get_labelID(obj)
+            % 基本的にはlabelIDにはid順に格納されているはずだが、別の開発による処理で順番が崩されない保証はない。
+            label2id=obj.labelsID;
+            id2label=struct();
+            labelStrs=string(fields(obj.labelsID));
+            for i = 1:length(labelStrs)
+                tmpId=obj.labelsID.(labelStrs(i));
+                id2label.("id_"+string(tmpId))=labelStrs(i);
             end
-
         end
+
     end
     methods(Static)
         function time=export_time(wave,fs,timeCh,logger)

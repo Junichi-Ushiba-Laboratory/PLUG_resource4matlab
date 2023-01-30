@@ -173,6 +173,45 @@ classdef PlugData_core < handle
                     end
                 end
         end
+        function epoching(obj,center,leftSec,rightSec)
+            % input:
+            %   center : flag(int) 
+            %   leftSec : 
+            %   rightSec : 
+            for modal=["eeg","imp","acc","ofst"]
+                leftSample=leftSec*obj.fs.(modal);
+                rightSample=rightSec*obj.fs.(modal);
+                obj.(modal).epoched=struct();
+                obj.(modal).epoched.time=[-leftSample/obj.fs.(modal) : 1/obj.fs.(modal) : rightSample/obj.fs.(modal)];%1*x配列
+                obj.(modal).epoched.raw=struct();
+                channels=string(fields(obj.(modal).raw));
+                for channel=channels.'
+                    obj.(modal).epoched.raw.(channel)=[];
+                    if modal=="eeg"
+                        obj.(modal).epoched.filterd.(channel)=[];
+                    end
+                end
+                masterDin=obj.(modal).dins;
+                for index =1:size(masterDin,2)
+                    din=masterDin(1,index);
+                    if din==center
+                        zeroIndex=masterDin(2,index);
+                        leftIndex=zeroIndex-leftSample;
+                        rightIndex=zeroIndex+rightSample;
+                        for channel=channels.'
+                            obj.(modal).epoched.raw.(channel)=[obj.(modal).epoched.raw.(channel),obj.(modal).raw.(channel)(leftIndex:rightIndex)];%多次元配列trial数*x
+                            if modal=="eeg"
+                                obj.(modal).epoched.filterd.(channel)=[obj.(modal).epoched.filterd.(channel),obj.(modal).filterd.(channel)(leftIndex:rightIndex)];
+                            end
+                        end
+
+                        obj.(modal).epoched.flag=obj.(modal).flag(leftIndex:rightIndex);%1*x配列
+                        obj.(modal).epoched.dins=intersect(find(masterDin(2,:)>leftIndex),find(masterDin(2,:)<rightIndex));
+                    end
+                end
+            end
+
+        end
         %% 基本解析用関数
         function obj=filt_eeg(obj)
             % ss
@@ -265,10 +304,10 @@ classdef PlugData_core < handle
             obj.eeg.(target).spctl=struct();
             channels=string(fields(obj.eeg.(target)));
             winSize=obj.fs.eeg;
+            stride=round(0.1*winSize);
 
             obj.eeg.(target).spctl.windowSize=winSize;
             obj.eeg.(target).spctl.stride=round(0.1*winSize);
-            obj.eeg.(target).spctl.windowSize=winSize;
             h=hanning(winSize);
             for chi=1:length(channels)
                 ch=channels(chi);
@@ -277,22 +316,59 @@ classdef PlugData_core < handle
                 end
                 origWave=obj.eeg.(target).(ch)(obj.eeg.time>=0); % この実装が本当に良いのだろうか...
                 fullLen=length(origWave);
-                winNum=1+(fullLen-winSize)/(obj.eeg.(target).spctl.stride);
+                winNum=1+(fullLen-winSize)/stride;
                 tmp_psd=[];
                 for ind=1:winNum
-                    head=((ind-1)*obj.eeg.(target).spctl.stride)+1;
+                    head=((ind-1)*stride)+1;
                     foot=head+winSize-1;
                     segment=origWave(head:foot);
-                    %segment=origWave(head:foot)-mean(origWave(head:foot));
                     segment=segment.*h;
                     segment=fft(segment);
-                    tmp_psd=[tmp_psd,(abs(segment(1:fix(end/2))).^2)/(obj.fs.eeg*obj.fs.eeg)];
+                    tmp_psd=[tmp_psd,(abs(segment(1:fix(end/2))).^2)/(winSize*winSize)];
                 end
                 obj.eeg.(target).spctl.(ch).indiv=tmp_psd;
                 obj.eeg.(target).spctl.(ch).mean=mean(tmp_psd,2);
             end
-            times=(0:winNum-1)*(obj.eeg.(target).spctl.stride/obj.fs.eeg);
+            times=(0:winNum-1)*(stride/obj.fs.eeg);
             obj.eeg.(target).spctl.time=times;
+        end
+        function obj=fft_epochedEeg(obj,target)
+            % psdを各時間窓で格納
+            % eeg.epoched.spctlにチャンネルごとに格納
+            % TODO : eegの外側に格納する形式に変更
+            if target==""
+                target="raw";
+            end
+            obj.eeg.epoched.(target).spctl=struct();
+            channels=string(fields(obj.eeg.(target)));
+            winSize=obj.fs.eeg;
+            stride=round(0.1*winSize);
+
+            obj.eeg.epoched.(target).spctl.windowSize=winSize;
+            obj.eeg.epoched.(target).spctl.stride=stride;
+            h=hanning(winSize);
+            for chi=1:length(channels)
+                ch=channels(chi);
+                if ch=="spctl" % スペクトル格納用チャンネルは無視
+                    break
+                end
+                origWave=obj.eeg.epoched.(target).(ch);
+                fullLen=length(origWave);
+                winNum=1+(fullLen-winSize)/stride;
+                tmp_psd=[];
+                for ind=1:winNum
+                    head=((ind-1)*stride)+1;
+                    foot=head+winSize-1;
+                    segment=origWave(head:foot,:);
+                    segment=segment.*h;
+                    segment=fft(segment);
+                    tmp_psd=cat(3,tmp_psd,(abs(segment(1:fix(end/2),:)).^2)/(winSize*winSize));
+                end
+                obj.eeg.epoched.(target).spctl.(ch).indiv=tmp_psd;
+                obj.eeg.epoched.(target).spctl.(ch).mean=squeeze(mean(tmp_psd,3));
+            end
+            times=(0:winNum-1)*(stride/obj.fs.eeg);
+            obj.eeg.epoched.(target).spctl.time=times;
         end
         function obj=set_flag(obj,leftTime,rightTime,flag)
             % change flag information
