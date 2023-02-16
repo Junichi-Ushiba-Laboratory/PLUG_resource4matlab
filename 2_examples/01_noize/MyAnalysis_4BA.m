@@ -30,13 +30,13 @@ classdef MyAnalysis_4BA < PlugData_thimple
             obj.fft_eeg(obj.target);
         end
         function obj=execute_epochedView(obj,varargin)
-            figNoffset=1;
+            figNum=1;
             if nargin>=2
                 for i=2:nargin
                     if varargin(i)=="target"
                         obj.target=varargin(i+1);
                     elseif varargin(i)=="figNoffset"
-                        figNoffset=varargin(i+1);
+                        figNum=varargin(i+1);
                     end
                 end
             end
@@ -48,10 +48,11 @@ classdef MyAnalysis_4BA < PlugData_thimple
             for i=1:taskN
                 task=idlabel.("id_"+string(i));
                 obj.epoching(i,0,3);
-                obj.epochView(figNoffset);
+                obj.epochView(figNum);
+                task=strrep(task,"_","\_");
                 sgtitle(task);
-                figout(figNoffset,obj.saveDir,"epochedView_"+task,"nosync");
-                figNoffset=figNoffset+1;
+                figout(figNum,obj.saveDir,"epochedView_"+task,"nosync");
+                figNum=figNum+1;
             end
             % visualize t-fMap
             for i=1:taskN
@@ -59,27 +60,27 @@ classdef MyAnalysis_4BA < PlugData_thimple
                 % psd算出
                 obj.epoching(i,0,3);
                 obj.fft_epochedEeg(obj.target);
-                obj.tfView(figNoffset,"C3");
-                figout(figNoffset,obj.saveDir,"tf_"+task+"_C3");
-                figNoffset=figNoffset+1;
+                obj.tfView(figNum,"C3");
+                figout(figNum,obj.saveDir,"tf_"+task+"_C3");
+                figNum=figNum+1;
 
-                obj.tfView(figNoffset,"C4");
-                figout(figNoffset,obj.saveDir,"tf_"+task+"_C4");
-                figNoffset=figNoffset+1;
+                obj.tfView(figNum,"C4");
+                figout(figNum,obj.saveDir,"tf_"+task+"_C4");
+                figNum=figNum+1;
 
-                obj.tfView(figNoffset,"Cz");
-                figout(figNoffset,obj.saveDir,"tf_"+task+"_Cz");
-                figNoffset=figNoffset+1;
+                obj.tfView(figNum,"Cz");
+                figout(figNum,obj.saveDir,"tf_"+task+"_Cz");
+                figNum=figNum+1;
             end
 
             % visualize indiv psds
             % obj.indivPsdView(figNoffset)
             
-            obj.PsdView_tasks(figNoffset,"C3");
-            obj.PsdView_tasks(figNoffset+1,"C4");
-            obj.PsdView_tasks(figNoffset+2,"Cz");
-            obj.PsdView_tasks(figNoffset+3,"C3CzRef");
-            obj.PsdView_tasks(figNoffset+4,"C4CzRef");
+            obj.PsdView_tasks(figNum,"C3");
+            obj.PsdView_tasks(figNum+1,"C4");
+            obj.PsdView_tasks(figNum+2,"Cz");
+            obj.PsdView_tasks(figNum+3,"C3CzRef");
+            obj.PsdView_tasks(figNum+4,"C4CzRef");
         end
         
         %% 解析関数_追加
@@ -88,24 +89,26 @@ classdef MyAnalysis_4BA < PlugData_thimple
         end
         %% 描画関数
         function f=epochView(obj,figN)
+            % エポッキング後の波形を重ね書きする。
             f=figure(figN);
             time=obj.eeg.epoched.time;
 
             ax1=subplot(3,1,1);
-            wave=obj.eeg.epoched.(obj.target).("C3");
+            wave=obj.eeg.epoched.(obj.target).("C3")*1e6; %V to uV
             plot(time,wave-mean(wave));
-            ylabel(obj.target+" EEG in C3");
+            ylabel(obj.target+" EEG\_C3[\muV]");
             ax2=subplot(3,1,2);
-            wave=obj.eeg.epoched.(obj.target).("C4");
+            wave=obj.eeg.epoched.(obj.target).("C4")*1e6;
             plot(time,wave-mean(wave));
-            ylabel(obj.target+" EEG in C4");
+            ylabel(obj.target+" EEG\_C4[\muV]");
             ax3=subplot(3,1,3);
-            wave=obj.eeg.epoched.(obj.target).("Cz");
+            wave=obj.eeg.epoched.(obj.target).("Cz")*1e6;
             plot(time,wave-mean(wave));
-            ylabel(obj.target+" EEG in Cz");
-
+            ylabel(obj.target+" EEG\_Cz[\muV]");
+            xlabel("time [s]");
             subplot(3,1,1);
-            linkaxes([ax1,ax2,ax3],"x");
+            linkaxes([ax1,ax2,ax3],"xy");
+            ylim([-70,70]);
         end
         function f=tfView(obj,figN,ch)
             f=figure(figN);
@@ -118,7 +121,7 @@ classdef MyAnalysis_4BA < PlugData_thimple
             c.Limits=[-17,-11];
         end
         function f=PsdView_tasks(obj,figN,ch)
-            % 1ちゃんねるについて、タスク間での平均PSDの比較
+            % 1チャンネルについて、タスク間での平均PSDの比較
             f=figure(figN);
             legends=[];
             for i=1:length(fields(obj.labelsID))
@@ -129,6 +132,7 @@ classdef MyAnalysis_4BA < PlugData_thimple
                 obj.fft_epochedEeg(obj.target);
                 obj.PsdView_single(figN,ch);
                 hold on;
+                task=strrep(task,"_","\_");
                 legends=[legends,task];
             end
             legend(legends);
@@ -144,7 +148,7 @@ classdef MyAnalysis_4BA < PlugData_thimple
             semilogy(0:99,mean_psds,"LineWidth",2);
             grid on;
             xlabel("frequency [Hz]");
-            ylabel("psd [\muV/Hz]");
+            ylabel("psd [\muV^2/Hz]");
             %ylim([1e-30,1e-10]);
         end
 
