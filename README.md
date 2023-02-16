@@ -14,19 +14,20 @@ PLUGを用いた事後解析のための関数集。
 ### 開発環境_MATLABのバージョン
 2022a
 ### 開発環境_modules
-- [signal processing module]()
-- [利用モジュール要確認]()
+- [signal processing toolbox](https://jp.mathworks.com/products/signal.html)
+- その他必要モジュールが見つかり次第追記します。ご一報ください。
 ### 対応するloggerのバージョン
 - V1.0.3
 ### 想定する利用方法
 - 用途に合わせてPlug_Analysisを書き換えるor継承して関数を追加することを想定しています。
-- 1セッション(すなわち1計測データ)に紐づく解析を
+- 1セッション(すなわち1計測データ)に紐づく解析を1インスタンスとして建てられるイメージです。
 
 ## 関連リンク
-- PLUG_logger配布先
-- python版
+- [PLUG_logger配布先](https://drive.google.com/drive/folders/1Ubncn51XVxTQvzBBvWvCVQYMFGrulUmm)
+- python版解析リソース(整備中)
+
 ## 残課題
 - [ ] 別モダリティデータとのデータアライメント例の整備
-- [ ] リンク繋げる
+- [x] リンク繋げる
 - [ ] python版の整備
 - [ ] EEGLABなどとの繋ぎ込み
