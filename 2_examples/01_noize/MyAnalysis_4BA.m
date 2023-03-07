@@ -139,7 +139,7 @@ classdef MyAnalysis_4BA < PlugData_thimple
             figout(figN,obj.saveDir,"psds_"+ch);
         end
         function f=PsdView_single(obj,figN,ch)
-            % 1ちゃんねるについて、タスク間での平均PSDの比較
+            % 1チャンネルに着目して、PSD描出。epochingが済んでいて、描出したいepochが決まっている前提
             f=figure(figN);
             indiv_psds=obj.eeg.epoched.(obj.target).spctl.(ch).indiv;
             mean_psds=squeeze(mean(indiv_psds(:,:,:),[2,3]));
