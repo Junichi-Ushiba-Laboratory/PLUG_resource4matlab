@@ -1,7 +1,8 @@
 %{
 plugデータの解析_thimpleLogger用。
 2022/11/12より
-
+ロガーに依存する設定がここに。
+ロガーのバージョン更新などに対応するため、ここで切り分ける
 usage:
  data=PlugData_thimple("testData/","dataFromThimpleLogger.csv")
 %}
