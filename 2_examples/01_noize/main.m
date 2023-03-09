@@ -22,7 +22,7 @@ clearvars;
 numOfTrial=30;
 label="rightHand";
 
-dataDir="../../1_testData/";
+dataDir="../../1_testData/01_noize/";
 dataName="BraintechAcademy_protc_NNC_30_202301280752.csv";
 
 addpath("../../0_sources/core");%PlugData_thimpleまでのパスを記載
