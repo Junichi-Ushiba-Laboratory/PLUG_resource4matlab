@@ -23,13 +23,13 @@ classdef MyAnalysis_4BA < PlugData_thimple
             obj.import(dataName);
         end
         %% 実行セット
-        function obj=execute_preprocess(obj)
+        function obj=loc_execute_preprocess(obj)
             % preprocessing
             obj.filt_eeg();
             % 全体fft
             obj.fft_eeg(obj.target);
         end
-        function obj=execute_epochedView(obj,varargin)
+        function obj=loc_execute_epochedView(obj,varargin)
             figNum=1;
             if nargin>=2
                 for i=2:nargin
@@ -48,7 +48,7 @@ classdef MyAnalysis_4BA < PlugData_thimple
             for i=1:taskN
                 task=idlabel.("id_"+string(i));
                 obj.epoching(i,0,3);
-                obj.epochView(figNum);
+                obj.loc_epochView(figNum);
                 task=strrep(task,"_","\_");
                 sgtitle(task);
                 figout(figNum,obj.saveDir,"epochedView_"+task,"nosync");
@@ -60,15 +60,15 @@ classdef MyAnalysis_4BA < PlugData_thimple
                 % psd算出
                 obj.epoching(i,0,3);
                 obj.fft_epochedEeg(obj.target);
-                obj.tfView(figNum,"C3");
+                obj.loc_tfView(figNum,"C3");
                 figout(figNum,obj.saveDir,"tf_"+task+"_C3");
                 figNum=figNum+1;
 
-                obj.tfView(figNum,"C4");
+                obj.loc_tfView(figNum,"C4");
                 figout(figNum,obj.saveDir,"tf_"+task+"_C4");
                 figNum=figNum+1;
 
-                obj.tfView(figNum,"Cz");
+                obj.loc_tfView(figNum,"Cz");
                 figout(figNum,obj.saveDir,"tf_"+task+"_Cz");
                 figNum=figNum+1;
             end
@@ -76,19 +76,19 @@ classdef MyAnalysis_4BA < PlugData_thimple
             % visualize indiv psds
             % obj.indivPsdView(figNoffset)
             
-            obj.PsdView_tasks(figNum,"C3");
-            obj.PsdView_tasks(figNum+1,"C4");
-            obj.PsdView_tasks(figNum+2,"Cz");
-            obj.PsdView_tasks(figNum+3,"C3CzRef");
-            obj.PsdView_tasks(figNum+4,"C4CzRef");
+            obj.loc_PsdView_tasks(figNum,"C3");
+            obj.loc_PsdView_tasks(figNum+1,"C4");
+            obj.loc_PsdView_tasks(figNum+2,"Cz");
+            obj.loc_PsdView_tasks(figNum+3,"C3CzRef");
+            obj.loc_PsdView_tasks(figNum+4,"C4CzRef");
         end
         
         %% 解析関数_追加
-        function ERDs=get_ERD(obj)
+        function ERDs=loc_get_ERD(obj)
             % code here
         end
         %% 描画関数
-        function f=epochView(obj,figN)
+        function f=loc_epochView(obj,figN)
             % エポッキング後の波形を重ね書きする。
             f=figure(figN);
             time=obj.eeg.epoched.time;
@@ -110,7 +110,7 @@ classdef MyAnalysis_4BA < PlugData_thimple
             linkaxes([ax1,ax2,ax3],"xy");
             ylim([-70,70]);
         end
-        function f=tfView(obj,figN,ch)
+        function f=loc_tfView(obj,figN,ch)
             f=figure(figN);
             drRng=[5,45];
 
@@ -120,7 +120,7 @@ classdef MyAnalysis_4BA < PlugData_thimple
             c.Label.String = 'log-Power [μV^2]';
             c.Limits=[-17,-11];
         end
-        function f=PsdView_tasks(obj,figN,ch)
+        function f=loc_PsdView_tasks(obj,figN,ch)
             % 1チャンネルについて、タスク間での平均PSDの比較
             f=figure(figN);
             legends=[];
@@ -130,7 +130,7 @@ classdef MyAnalysis_4BA < PlugData_thimple
                 % psd算出
                 obj.epoching(i,0,3);
                 obj.fft_epochedEeg(obj.target);
-                obj.PsdView_single(figN,ch);
+                obj.loc_PsdView_single(figN,ch);
                 hold on;
                 task=strrep(task,"_","\_");
                 legends=[legends,task];
@@ -138,7 +138,7 @@ classdef MyAnalysis_4BA < PlugData_thimple
             legend(legends);
             figout(figN,obj.saveDir,"psds_"+ch);
         end
-        function f=PsdView_single(obj,figN,ch)
+        function f=loc_PsdView_single(obj,figN,ch)
             % 1チャンネルに着目して、PSD描出。epochingが済んでいて、描出したいepochが決まっている前提
             f=figure(figN);
             indiv_psds=obj.eeg.epoched.(obj.target).spctl.(ch).indiv;
