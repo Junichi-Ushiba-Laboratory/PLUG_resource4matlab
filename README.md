@@ -35,3 +35,7 @@ PLUGを用いた事後解析のための関数集。
 - [x] リンク繋げる
 - [ ] python版の整備
 - [ ] EEGLABなどとの繋ぎ込み
+
+連絡先
+福田 森
+fukuda@brain.bio.keio.ac.jp
