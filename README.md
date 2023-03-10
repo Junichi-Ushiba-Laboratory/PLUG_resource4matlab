@@ -7,12 +7,13 @@ PLUGを用いた事後解析のための関数集。
 - インポートと整形
 - ノイズ時区間の確認(生波形の描出)
 - 周波数フィルタリング
-- エポッキング
+- エポッキング()
 - 短時間FFT
 - 可視化関数
 ## Getting Started
 ### 開発環境_MATLABのバージョン
-2022a
+- 2022aで開発
+- 2021b以降にて動作を確認しています
 ### 開発環境_modules
 - [signal processing toolbox](https://jp.mathworks.com/products/signal.html)
 - その他必要モジュールが見つかり次第追記します。ご一報ください。
