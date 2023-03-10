@@ -24,6 +24,7 @@ PLUGを用いた事後解析のための関数集。
 ### 想定する利用方法
 - 用途に合わせてPlug_Analysisを書き換えるor継承して関数を追加することを想定しています。
 - 1セッション(すなわち1計測データ)に紐づく解析を1インスタンスとして建てられるイメージです。
+- 実行したいmain.mのある階層でスクリプトを実行してください。
 
 ## 関連リンク
 - [PLUG_logger配布先](https://drive.google.com/drive/folders/1Ubncn51XVxTQvzBBvWvCVQYMFGrulUmm)
