@@ -28,6 +28,6 @@ dataName="BraintechAcademy_protc_NNC_30_202301280752.csv";
 addpath("../../0_sources/core");%PlugData_thimpleまでのパスを記載
 data=MyAnalysis_4BA(dataDir,dataName);
 
-data.execute_preprocess();
-data.execute_epochedView();
+data.loc_execute_preprocess();
+data.loc_execute_epochedView();
 
