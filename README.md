@@ -7,7 +7,7 @@ PLUGを用いた事後解析のための関数集。
 - インポートと整形
 - ノイズ時区間の確認(生波形の描出)
 - 周波数フィルタリング
-- エポッキング()
+- エポッキング(data.eeg.epoched,data.imp.epochedなどに格納されます)
 - 短時間FFT
 - 可視化関数
 ## Getting Started
