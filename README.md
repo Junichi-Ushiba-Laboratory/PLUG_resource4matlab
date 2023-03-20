@@ -25,6 +25,15 @@ PLUGを用いた事後解析のための関数集。
 - 用途に合わせてPlug_Analysisを書き換えるor継承して関数を追加することを想定しています。
 - 1セッション(すなわち1計測データ)に紐づく解析を1インスタンスとして建てられるイメージです。
 - 実行したいmain.mのある階層でスクリプトを実行してください。
+- 最も汎用性が高いのはepoching関数かと思います。
+- 3段階の継承がなされています。
+  - PlugAnalysis > PlugData_thimple > PlugData_core
+- それぞれの立ち位置は以下の通りです
+  - PlugData_core : 汎用性の高いデータ処理。
+  - PlugData_thimple : データロガーに依存する処理。ロガーが出力するcsvの書式に変更があった場合に対応するためのものです
+  - PlugAnalysis : 実験プロトコル固有の処理や定数を記載。
+
+
 
 ## 関連リンク
 - [PLUG_logger配布先](https://drive.google.com/drive/folders/1Ubncn51XVxTQvzBBvWvCVQYMFGrulUmm)
