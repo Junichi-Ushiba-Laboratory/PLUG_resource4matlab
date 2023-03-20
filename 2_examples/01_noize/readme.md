@@ -23,5 +23,8 @@ figs_filterd内にfigure3種類を出力
 # 出力figureの解釈について
 ## フィルタ済波形の描画
 blinkやbiteなどを見ると、1秒遅れで振幅が大きい区間が始まることが確認できます。
-[bite wave](/figs_filterd/epochedView_bite.png)
+![bite wave](figs_filterd/epochedView_bite.png)
+![blink_wave](figs_filterd/epochedView_blink.png)
+その他タスク中の波形から、異常なノイズの混入がないことを確認できます。(左手運動時の0.3秒目あたりにスパイクがありますが、タスク開始前なので一旦無視します)
+![blink_wave](figs_filterd/epochedView_left_hand_imagery.png)
 ## 
