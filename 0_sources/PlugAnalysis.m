@@ -6,7 +6,7 @@ PlugDataに解析用関数を付加。
 %}
 classdef PlugAnalysis < PlugData_thimple
     properties
-        cutoffSeconds=10;
+        
         label="LABEL"
         target="raw"
         saveDir=""
@@ -71,7 +71,7 @@ classdef PlugAnalysis < PlugData_thimple
             figure(figN);
             ax1=subplot(2,1,1);
             wave=obj.eeg.(obj.target).(obj.channel)(onset:end);
-            time=obj.eeg.time(onset:end)-obj.cutoffSeconds;
+            time=obj.eeg.time(onset:end);
 
             plot(time,wave-mean(wave));
             %ylim([-1.5e-4,1e-4]);
@@ -85,7 +85,7 @@ classdef PlugAnalysis < PlugData_thimple
         function multiChView(obj,figN)
             onset=find(obj.eeg.flag(1:end/2)==3,1,"last");
             figure(figN);
-            time=obj.eeg.time(onset:end)-obj.cutoffSeconds;
+            time=obj.eeg.time(onset:end);
             axes=[];
             if obj.hardWare=="PLUG0"
                 channels=["C3","C4","F3","F4","T3","T4"];
@@ -146,7 +146,7 @@ classdef PlugAnalysis < PlugData_thimple
         end
         function tfView(obj,figN)
             stride=obj.eeg.(obj.target).spctl.stride;
-            obj.offset=max(floor(obj.cutoffSeconds*200/stride),1);
+            obj.offset=1;
             offset=obj.offset;
             drRng=[5,95];
 
@@ -159,7 +159,7 @@ classdef PlugAnalysis < PlugData_thimple
         end
         function indivPsdView(obj,figN)
             stride=obj.eeg.(obj.target).spctl.stride;
-            obj.offset=max(floor(obj.cutoffSeconds*200/stride),1);
+            obj.offset=1;
             offset=obj.offset;
 
             figure(figN);
