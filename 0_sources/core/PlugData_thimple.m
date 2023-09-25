@@ -45,7 +45,7 @@ classdef PlugData_thimple < PlugData_core
             flags=readmatrix(obj.dataPath,"Range","C:C","OutputType","string");
             flags=flags(2:end);
             obj.labels=flags;
-            flagVal=unique(flags);
+            flagVal=unique(flags,'Stable'); % critical iwama
             for i=1:length(flagVal)
                 indice=flags==flagVal(i);
                 flags(indice)=i;
