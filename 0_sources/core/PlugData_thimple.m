@@ -49,7 +49,8 @@ classdef PlugData_thimple < PlugData_core
             % flagが文字列データで格納されてしまうせいで他のインポート系関数が異常を起こす。
             % その調整用に、新規にflag列を作成し、originに格納することで対応する。
             flags=readmatrix(obj.dataPath,"Range","C:C","OutputType","string");
-            flags=flags(2:end);
+            flags=flags(2:end); % remove header
+            flags(ismissing(flags))="MISSING"; % replace empty entries to "MISSING"
             obj.labels=flags;
             flagVal=unique(flags,'Stable'); % critical iwama
             for i=1:length(flagVal)
