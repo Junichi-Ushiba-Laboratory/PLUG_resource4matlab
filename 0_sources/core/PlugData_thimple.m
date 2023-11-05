@@ -27,10 +27,16 @@ classdef PlugData_thimple < PlugData_core
             
         end
         function import(obj,dataName)
-            % dataName must ends with .csv
+            % Only .csv format is supported.
+            dataName=erase(dataName,".csv")+".csv";
             obj.dataName=dataName;
             obj.dataPath=fullfile(obj.storageDir,obj.dataName);
-            obj.origin=readmatrix(obj.dataPath);
+            try
+                obj.origin=readmatrix(obj.dataPath);
+            catch
+                dir(obj.storageDir)
+                error("Only listed above were found.");
+            end
             obj.reformFlag();
 
             obj.strip_eeg();
