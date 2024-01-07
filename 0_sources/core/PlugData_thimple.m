@@ -27,16 +27,10 @@ classdef PlugData_thimple < PlugData_core
             
         end
         function import(obj,dataName)
-            % Only .csv format is supported.
-            dataName=erase(dataName,".csv")+".csv";
+            % dataName must ends with .csv
             obj.dataName=dataName;
             obj.dataPath=fullfile(obj.storageDir,obj.dataName);
-            try
-                obj.origin=readmatrix(obj.dataPath);
-            catch
-                dir(obj.storageDir)
-                error("Only listed above were found.");
-            end
+            obj.origin=readmatrix(obj.dataPath);
             obj.reformFlag();
 
             obj.strip_eeg();
@@ -49,8 +43,7 @@ classdef PlugData_thimple < PlugData_core
             % flagが文字列データで格納されてしまうせいで他のインポート系関数が異常を起こす。
             % その調整用に、新規にflag列を作成し、originに格納することで対応する。
             flags=readmatrix(obj.dataPath,"Range","C:C","OutputType","string");
-            flags=flags(2:end); % remove header
-            flags(ismissing(flags))="MISSING"; % replace empty entries to "MISSING"
+            flags=flags(2:end);
             obj.labels=flags;
             flagVal=unique(flags,'Stable'); % critical iwama
             for i=1:length(flagVal)
