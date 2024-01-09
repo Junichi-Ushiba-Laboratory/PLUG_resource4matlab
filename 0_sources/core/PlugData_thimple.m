@@ -15,15 +15,23 @@ classdef PlugData_thimple < PlugData_core
     end
 
     methods
-        function obj=PlugData_thimple(storageDir)
-            obj=obj@PlugData_core(storageDir,"PLUG","thimple_logger")
+        function obj=PlugData_thimple(storageDir,hardware)
+            % 
+            % 
+            % 
+            arguments
+                storageDir (1,1) string
+                hardware (1,1) string = "PLUG"
+            end
+
+            obj=obj@PlugData_core(storageDir,hardware,"thimple_logger")
             obj.col=obj.channelIndices();
             obj.shift.eeg=obj.col.eeg_time;
             
             obj.shift.imp=obj.col.imp_Cz;
             obj.shift.acc=obj.col.acc_1;
             obj.shift.ofst=obj.col.ofst_Cz;
-            obj.loadOffset=2;
+            obj.loadOffset=1;
             
         end
         function import(obj,dataName)
@@ -43,13 +51,14 @@ classdef PlugData_thimple < PlugData_core
             % flagが文字列データで格納されてしまうせいで他のインポート系関数が異常を起こす。
             % その調整用に、新規にflag列を作成し、originに格納することで対応する。
             flags=readmatrix(obj.dataPath,"Range","C:C","OutputType","string");
-            flags=flags(2:end);
+            flags=flags(obj.loadOffset+1:end); % readmatrixの使い方によるずれ。
+            flags(ismissing(flags))="none"; % 実験ファイルを与えずに計測した場合に必要。
             obj.labels=flags;
             flagVal=unique(flags,'Stable'); % critical iwama
             for i=1:length(flagVal)
-                indice=flags==flagVal(i);
-                flags(indice)=i;
-                obj.labelsID.(flagVal(i))=i;
+                indice = flags==flagVal(i); % 一致文字列のインデックスを抜き出し。
+                flags(indice) = i; % flagの各文字列を番号化
+                obj.labelsID.(flagVal(i)) = i; % 番号とflagの紐付けを記録
             end
             obj.origin(:,3)=flags;
         end
@@ -66,39 +75,64 @@ classdef PlugData_thimple < PlugData_core
 
     end
     methods(Static)
-        function time=export_time(wave,fs,timeCh,logger)
-            if logger~="thimple_logger"
-                error("logger must be thimple_logger")
-            end
-            stt=2;
-            time=0:1:length(rmmissing(wave(stt:end,timeCh)))-1;
+        function time=export_time(wave,fs,timeCh)
+            time=0:1:length(rmmissing(wave(:,timeCh)))-1;
             time=time/fs;
             flagCh=timeCh-1;
         end
-        function index=channelIndices()
+        function index=channelIndices(hardware)
             % hardwareに合わせて、元データの列番号を返す
             % 
-            index=struct();
-            index.eeg_flag=3;
-            index.eeg_time=1;
-            index.eeg_Cz=4;index.eeg_NC1=5;
-            index.eeg_C3=6;index.eeg_NC2=7;index.eeg_NC3=8;index.eeg_NC4=9;
-            index.eeg_C4=10;index.eeg_NC5=11;
-            index.imp_flag=3;
-            index.imp_time=1;
-            index.imp_Cz=12;index.imp_NC1=13;
-            index.imp_C4=14;index.imp_NC2=15;index.imp_NC3=16;index.imp_NC4=17;
-            index.imp_C3=18;index.imp_NC5=19;
-            index.acc_flag=3;
-            index.acc_time=1;
-            index.acc_1=20;
-            index.acc_2=21;
-            index.acc_3=22;
-            index.ofst_flag=3;
-            index.ofst_time=1;
-            index.ofst_Cz=23;index.ofst_NC1=24;
-            index.ofst_C4=25;index.ofst_NC2=26;index.ofst_NC3=27;index.ofst_NC4=28;
-            index.ofst_C3=29;index.ofst_NC5=30;
+            arguments
+                hardware (1,1) string = "PLUG"
+            end
+            switch hardware
+                case "PLUG"
+                    index=struct();
+                    index.eeg_flag=3;
+                    index.eeg_time=1;
+                    index.eeg_Cz=4;index.eeg_NC1=5;
+                    index.eeg_C3=6;index.eeg_NC2=7;index.eeg_NC3=8;index.eeg_NC4=9;
+                    index.eeg_C4=10;index.eeg_NC5=11;
+                    index.imp_flag=3;
+                    index.imp_time=1;
+                    index.imp_Cz=12;index.imp_NC1=13;
+                    index.imp_C4=14;index.imp_NC2=15;index.imp_NC3=16;index.imp_NC4=17;
+                    index.imp_C3=18;index.imp_NC5=19;
+                    index.acc_flag=3;
+                    index.acc_time=1;
+                    index.acc_1=20;
+                    index.acc_2=21;
+                    index.acc_3=22;
+                    index.ofst_flag=3;
+                    index.ofst_time=1;
+                    index.ofst_Cz=23;index.ofst_NC1=24;
+                    index.ofst_C4=25;index.ofst_NC2=26;index.ofst_NC3=27;index.ofst_NC4=28;
+                    index.ofst_C3=29;index.ofst_NC5=30;
+                case "soundV1"
+                    index=struct();
+                    index.eeg_flag=3;
+                    index.eeg_time=1;
+                    index.eeg_Cz=4;index.eeg_NC1=5;
+                    index.eeg_C3=6;index.eeg_NC2=7;index.eeg_NC3=8;index.eeg_NC4=9;
+                    index.eeg_C4=10;
+                    index.eeg_sound=11; % 音声データ入力ch。その時の配線による部分もあるので注意
+                    index.imp_flag=3;
+                    index.imp_time=1;
+                    index.imp_Cz=12;index.imp_NC1=13;
+                    index.imp_C4=14;index.imp_NC2=15;index.imp_NC3=16;index.imp_NC4=17;
+                    index.imp_C3=18;index.imp_NC5=19;
+                    index.acc_flag=3;
+                    index.acc_time=1;
+                    index.acc_1=20;
+                    index.acc_2=21;
+                    index.acc_3=22;
+                    index.ofst_flag=3;
+                    index.ofst_time=1;
+                    index.ofst_Cz=23;index.ofst_NC1=24;
+                    index.ofst_C4=25;index.ofst_NC2=26;index.ofst_NC3=27;index.ofst_NC4=28;
+                    index.ofst_C3=29;index.ofst_NC5=30;
+            end
         end
     end
 end

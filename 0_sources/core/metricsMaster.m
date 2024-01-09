@@ -8,37 +8,36 @@ PLUGに依存。
 メトリクスをだす、という機能はどれも一致しているはずだ。
 PLUGに依存しない部分を抜き出して後で抽象クラスを作ってもいいかもな。
 %}
-classdef metricsMaster < handle
+classdef MetricsMaster < handle
     properties
-        axyz=struct() % 時間情報格納配列。1*x。これは必ずしも時間が入らないので、構造体と軸ラベルの配列にした方がいいかもしれん。
-        dimLabel=[] % 各次元の情報。string
-        flag=[] % flag情報の格納配列。時間と同じ次元,長さを保つこと
-        dins=[] % din情報。
-        log=[""] % inが経験しているfilt情報
+        axyz = struct() % 時間情報格納配列。1*x。これは必ずしも時間が入らないので、構造体と軸ラベルの配列にした方がいいかもしれん。
+        dimLabel = [] % 各次元の情報。string
+        flag = [] % flag情報の格納配列。時間と同じ次元,長さを保つこと
+        dins = [] % din情報。
+        log = [""] % inが経験しているfilt情報
         info = struct();
+        units = struct();
     end
     properties(SetAccess=protected,GetAccess=public)
         in = struct(); %指標格納配列。
-        components= [""] % containerのfields。chなど。setにより自動で登録される。
-        genDate="" %これを出力した日付
-        generator="" % これを出力したファイルの名前
+        components = [""] % containerのfields。chなど。setにより自動で登録される。
+        genDate = "" %これを出力した日付
+        generator = "" % これを出力したファイルの名前
         no = struct();% 派生するメトリクスの置き場所。これはpublicの方がいい?
-        origin="" % 計算元メトリクス。
     end
 
     methods
-        function obj=metricsMaster(parent,generatorName)
+        function obj=MetricsMaster(parent,generatorName)
             %{
             description : 
                 インスタンスの作成。日付とスクリプト名は確定しているはずなので、ここで定義してしまう。
             input :
+                parent (list of str): 親メトリクスのログ。1*x list of string
                 generatorName (str): スクリプト名。mfilenameの出力を渡しておけばいい。
             %}
-            if ~isstring(generatorName)
-                error("metricsMaster.init() : input must be a string");
-            end
-            if ~isstring(parent)
-                error("metricsMaster.init() : input must be a string");
+            arguments
+                parent (1,:) string
+                generatorName (1,1) string
             end
             obj.genDate=string(datetime("today","Format",'yyyyMMdd'));
             obj.generator=generatorName;
@@ -48,7 +47,7 @@ classdef metricsMaster < handle
         end
         function obj=make(obj,metricsName,generatorName)
             % 子メトリクスの作成。いらんかも。
-            obj.no.(metricsName)=metricsMaster(obj.log,generatorName);
+            obj.no.(metricsName)=MetricsMaster(obj.log,generatorName);
             %obj.no.(metricsName).log=[obj.log,""];
         end
         function multi=make_multi(obj,parentNames,generatorName)
@@ -60,7 +59,7 @@ classdef metricsMaster < handle
                 log2add="-"+parent;
             end
             log2add=log2add+"]";
-            multi=metricsMaster(log2add,generatorName);
+            multi=MetricsMaster(log2add,generatorName);
         end
         function obj=check_fields(obj)
             %{
@@ -80,11 +79,10 @@ classdef metricsMaster < handle
             % input:
             %   setStruct : 格納したいメトリクス。must be a struct   
             %   log
-            if ~isstruct(setStruct)
-                error("meetricsMaster.set() : 1st input must be a struct");
-            end
-            if ~isstring(logString)
-                error("meetricsMaster.set() : 2nd input must be a string");
+            arguments
+                obj
+                setStruct (1,1) struct
+                logString (1,:) string
             end
             obj.components=string(fields(setStruct));
             obj.in=setStruct;
@@ -94,6 +92,84 @@ classdef metricsMaster < handle
             % もし孫メトリクスがあるなら
             % infoに注意書きを追加。
         end
+        function set_instance(obj, name, data, axyz, flag, ...
+                              units, dimLabel, info, ...
+                              parent)
+            %{
+            必要なものを一通り揃えるための関数。定義されていないものは親をコピーする。
+            
+            Args:
+                name (str): この処理の名前。ログにする。
+                data (dict): 各値はnumpy.ndarray型でなければならない。
+                axyz (dict): 1次元リストをvalueとして、dataの各軸のラベルをキーとする。
+                flag (list): _description_
+                units (List, optional): _description_. Defaults to [].
+                dimLabel (List, optional): _description_. Defaults to [].
+                info (dict, optional): _description_. Defaults to {}.
+                parent (list, optional): 親インスタンスを指定する。Defaults to [].
+    
+            Returns:
+                None
+            %}
+            arguments
+                obj
+                name (1,1) string
+                data (1,1) struct
+                axyz (1,1) struct
+                flag (1,:) int64
+                units (1,1) struct = struct()
+                dimLabel (1,:) string = []
+                info (1,1) struct = struct()
+                parent (1,1) = missing
+            end
+            if ~ismissing(parent) % 親が指定されている場合の処理
+                disp('parent given: copying parameters.');
+                % 親インスタンスのプロパティを現在のインスタンスにコピー
+                obj.units = parent.units;
+                obj.dimLabel = parent.dimLabel;
+                obj.info = parent.info;
+
+                % オプション引数で上書き
+                if ~isempty(units)
+                    obj.units = units;
+                end
+                if ~isempty(dimLabel)
+                    obj.dimLabel = dimLabel;
+                end
+                if ~isempty(fields(info))
+                    obj.info = info;
+                end
+            else
+                disp('parent undefined: setting required parameters.');
+                % オプション引数が未設定の場合はエラーを出力
+                if isempty(units)
+                    error('Units must be provided.');
+                end
+                if isempty(dimLabel)
+                    error('DimLabel must be provided.');
+                end
+                if isempty(fields(info))
+                    error('Info must be provided.');
+                end
+                % 必須引数を子インスタンスに代入
+                obj.units = units;
+                obj.dimLabel = dimLabel;
+                obj.info = info;
+            end
+
+            % その他のプロパティの設定
+            obj.flag = flag;
+            obj.axyz = axyz;
+
+            % dimLabelの中から、axyzに存在しないものを削除
+            labelsToRemove = ~ismember(obj.dimLabel, fieldnames(axyz));
+            obj.dimLabel(labelsToRemove) = [];
+
+            % その他の初期化処理（必要に応じて）
+            obj.set(data, name);  % このメソッドのMATLAB版を別途定義する必要があります。
+            obj.flag2din();  % このメソッドのMATLAB版を別途定義する必要があります。
+        end
+
         function obj=vis_default(obj,figN,varargin)
             % dimlabelsにtimeが存在する時に限る。
             % subplotにしてもいいかもしれん。
@@ -120,12 +196,18 @@ classdef metricsMaster < handle
             legs=obj.back_fill(ax,obj.dins,obj.axyz.time,legs);
             legend(legs);
         end
-        function obj=mean_eachComponent(obj)
+        function obj=mean_inComponent(obj,comp_t)
             % 平均の取得
-            obj.make("mean",string(mfilename));
+            arguments
+                obj
+                comp_t (1,1) string 
+            end
+            metName="mean_"+comp_t;
+            obj.make(metName,string(mfilename));
             output=struct();
+            dims = find(obj.dimLabel==comp_t);
             for comp=obj.components.'
-                output.(comp)=mean(obj.in.(comp),"all","omitnan");
+                output.(comp)=mean(obj.in.(comp),dims,"omitnan");
             end
             obj.no.mean.set(output,"mean");
             obj.no.mean.dimLabel=[""];
@@ -301,6 +383,27 @@ classdef metricsMaster < handle
                 filtCode=string(stFreq)+filtCode+"inf:";
             else
                 filtCode="0"+filtCode+string(enFreq)+":";
+            end
+        end
+        function object = parse(metricBase, findMetric)
+            % 指定した文字列に到達するまでパースして返す。
+            % input:
+            %   metricsBase (struct): metricsを格納している親struct。
+            %   findMetric (list of string): メトリクスに至るまでのパスを。 
+            arguments
+                metricBase struct
+                findMetric (1,:) string
+            end
+
+            % 初期化
+            object = metricBase;
+            % findMetricの各要素を辿ってtangoに代入
+            for i = 1:length(findMetric)
+                if i == 1
+                    object = object.(findMetric{i});
+                else
+                    object = object.no.(findMetric{i});
+                end
             end
         end
     end
